@@ -240,6 +240,33 @@ def train_DNN(train_xy_file_list, valid_xy_file_list, \
         logger.critical('%s type NN model is not supported!' %(model_type))
         raise
 
+    use_lhuc = False
+    if init_dnn_model_file != "_":
+        logger.info('load parameters from existing model: %s' %(init_dnn_model_file))
+        if not os.path.isfile(init_dnn_model_file):
+            sys.exit('Model file %s does not exist'%(init_dnn_model_file))
+        existing_dnn_model = pickle.load(open(init_dnn_model_file, 'rb'))
+        if not use_lhuc and not len(existing_dnn_model.params) == len(dnn_model.params):
+            sys.exit('Old and new models have different numbers of weight matrices')
+        elif use_lhuc and len(dnn_model.params) < len(existing_dnn_model.params):
+            sys.exit('In LHUC adaptation new model must have more parameters than old model.')
+        # assign the existing dnn model parameters to the new dnn model
+        k = 0
+        for i in range(len(dnn_model.params)):
+            ## Added for LHUC ##
+            # In LHUC, we keep all the old parameters intact and learn only a small set of new
+            # parameters
+            if dnn_model.params[i].name == 'c':
+                continue
+            else:
+                old_val = existing_dnn_model.params[k].get_value()
+                new_val = dnn_model.params[i].get_value()
+                if numpy.shape(old_val) == numpy.shape(new_val):
+                    dnn_model.params[i].set_value(old_val)
+                else:
+                    sys.exit('old and new weight matrices have different shapes')
+                k = k + 1
+
     logger.info('fine-tuning the %s model' %(model_type))
 
     start_time = time.time()
@@ -835,7 +862,7 @@ def main_function(cfg):
                       nnets_file_name = nnets_file_name, \
                       n_ins = lab_dim, n_outs = cfg.cmp_dim, ms_outs = cfg.multistream_outs, \
                       hyper_params = cfg.hyper_params, buffer_size = cfg.buffer_size, plot = cfg.plot, var_dict = var_dict, 
-                      cmp_mean_vector = cmp_mean_vector, cmp_std_vector = cmp_std_vector)
+                      cmp_mean_vector = cmp_mean_vector, cmp_std_vector = cmp_std_vector, init_dnn_model_file=cfg.start_from_trained_model)
         except KeyboardInterrupt:
             logger.critical('train_DNN interrupted via keyboard')
             # Could 'raise' the exception further, but that causes a deep traceback to be printed
