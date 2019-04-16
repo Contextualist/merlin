@@ -240,6 +240,7 @@ def train_DNN(train_xy_file_list, valid_xy_file_list, \
         logger.critical('%s type NN model is not supported!' %(model_type))
         raise
 
+    import pickle
     use_lhuc = False
     if init_dnn_model_file != "_":
         logger.info('load parameters from existing model: %s' %(init_dnn_model_file))
