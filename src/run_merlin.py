@@ -263,10 +263,10 @@ def train_DNN(train_xy_file_list, valid_xy_file_list, \
                 old_val = existing_dnn_model.params[k].get_value()
                 new_val = dnn_model.params[i].get_value()
                 if numpy.shape(old_val) == numpy.shape(new_val):
-                    logger.info('old_val %i: %s and new_val %i: %s are in the same shape', k, old_val, i, new_val)
+                    logger.info('old_val %i: %s and new_val %i: %s are in the same shape', k, numpy.shape(old_val), i, numpy.shape(new_val))
                     dnn_model.params[i].set_value(old_val)
                 else:
-                    logger.info('old_val %i: %s and new_val %i: %s have different shapes', k, old_val, i, new_val)
+                    logger.info('old_val %i: %s and new_val %i: %s have different shapes', k, numpy.shape(old_val), i, numpy.shape(new_val))
                     sys.exit('old and new weight matrices have different shapes')
                 k = k + 1
 
